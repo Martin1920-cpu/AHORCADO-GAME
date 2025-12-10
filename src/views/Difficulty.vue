@@ -1,5 +1,5 @@
 <template>
-  <q-page class="flex flex-center column q-gutter-md">
+  <q-page class="flex flex-center column q-gutter-sm q-pa-sm">
     <h1>Seleccionar Dificultad</h1>
     <p>Elige el nivel de dificultad para el juego:</p>
 
@@ -56,48 +56,98 @@
 
 <script setup>
 import { useRouter } from 'vue-router'
+import { useGameState } from '../composables/useGameState.js'
 
+const { estadoJuego, iniciarJuego, seleccionarPalabraAleatoria } = useGameState()
 const router = useRouter()
 
 const seleccionarDificultad = (dificultad) => {
-  window.estadoJuego.dificultadSeleccionada = dificultad
+  estadoJuego.dificultadSeleccionada = dificultad
   iniciarJuego()
   router.push('/game')
-}
-
-// Iniciar nuevo juego
-const iniciarJuego = () => {
-  window.estadoJuego.palabraActual = seleccionarPalabraAleatoria(window.estadoJuego.categoriaSeleccionada, window.estadoJuego.dificultadSeleccionada)
-  window.estadoJuego.letrasAdivinadas = []
-  window.estadoJuego.intentosFallidos = 0
-  window.estadoJuego.juegoTerminado = false
-  window.estadoJuego.ganado = false
-  window.estadoJuego.tiempoInicio = Date.now()
-  window.estadoJuego.tiempoFin = null
-}
-
-// Seleccionar palabra aleatoria basada en categoría y dificultad
-const seleccionarPalabraAleatoria = (categoria, dificultad) => {
-  const palabras = window.palabrasPorCategoria[categoria]
-  let palabrasFiltradas = palabras
-
-  if (dificultad === 'facil') {
-    palabrasFiltradas = palabras.filter(p => p.length <= 5)
-  } else if (dificultad === 'medio') {
-    palabrasFiltradas = palabras.filter(p => p.length > 5 && p.length <= 8)
-  } else if (dificultad === 'dificil') {
-    palabrasFiltradas = palabras.filter(p => p.length > 8)
-  }
-
-  if (palabrasFiltradas.length === 0) palabrasFiltradas = palabras
-
-  const indiceAleatorio = Math.floor(Math.random() * palabrasFiltradas.length)
-  return palabrasFiltradas[indiceAleatorio]
 }
 </script>
 
 <style scoped>
 .q-page {
   min-height: 100vh;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  color: #e94560;
+  font-family: 'Courier New', monospace;
+}
+
+h1 {
+  font-family: 'Impact', sans-serif;
+  font-size: 2.5em;
+  color: #feca57;
+  text-shadow: 2px 2px 0px #e94560;
+  margin-bottom: 20px;
+}
+
+p {
+  font-size: 1.2em;
+  color: #feca57;
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.q-card {
+  background: rgba(15, 52, 96, 0.9);
+  border: 3px solid #e94560;
+  border-radius: 10px;
+  box-shadow: 0 0 20px rgba(233, 69, 96, 0.5);
+  color: #feca57;
+  transition: all 0.3s ease;
+}
+
+.q-card:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 30px rgba(233, 69, 96, 0.7);
+}
+
+.q-card-section {
+  padding: 20px;
+}
+
+.text-h6 {
+  font-family: 'Impact', sans-serif;
+  font-size: 1.8em;
+  color: #feca57;
+  text-shadow: 1px 1px 0px #e94560;
+  margin-bottom: 10px;
+}
+
+.text-subtitle2 {
+  color: #e94560;
+  font-weight: bold;
+}
+
+.q-card-actions {
+  padding: 16px 20px;
+}
+
+.q-btn {
+  background: linear-gradient(45deg, #e94560, #feca57);
+  border: 2px solid #e94560;
+  color: #1a1a2e;
+  font-weight: bold;
+  font-family: 'Impact', sans-serif;
+  box-shadow: 0 0 10px rgba(233, 69, 96, 0.3);
+  transition: all 0.3s ease;
+}
+
+.q-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 15px rgba(233, 69, 96, 0.6);
+}
+
+.q-btn.flat {
+  background: transparent;
+  border: 2px solid #feca57;
+  color: #feca57;
+}
+
+.q-btn.flat:hover {
+  background: rgba(254, 202, 87, 0.1);
 }
 </style>

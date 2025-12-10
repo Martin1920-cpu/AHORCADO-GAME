@@ -1,7 +1,5 @@
 <template>
-  <q-page class="flex flex-center column q-gutter-md q-pa-md">
-    <h1>Juego del Ahorcado</h1>
-
+  <q-page class="flex flex-center column q-gutter-sm q-pa-sm">
     <!-- Dibujo -->
     <div class="hangman-drawing">
       <pre>{{ dibujoAhorcado }}</pre>
@@ -39,7 +37,6 @@
 
     <!-- Letras adivinadas -->
     <div class="guessed-letters">
-      <h3>Letras usadas:</h3>
       <div class="letters-grid">
         <q-chip
           v-for="letra in letrasOrdenadas"
@@ -52,21 +49,20 @@
       </div>
     </div>
 
-    <!-- Input para adivinar letra -->
-    <div v-if="!juegoTerminado" class="input-section">
-      <q-input
-        v-model="letraInput"
-        label="Ingresa una letra"
-        maxlength="1"
-        @keyup.enter="adivinarLetra"
-        :rules="[val => val.length === 1 || 'Ingresa solo una letra']"
-      />
-      <q-btn
-        color="primary"
-        label="Adivinar"
-        @click="adivinarLetra"
-        :disable="!letraInput || letraInput.length !== 1"
-      />
+    <!-- Teclado virtual -->
+    <div v-if="!juegoTerminado" class="keyboard-section">
+      <div class="keyboard">
+        <q-btn
+          v-for="letra in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'"
+          :key="letra"
+          :label="letra"
+          :color="letraUsada(letra) ? 'grey' : 'primary'"
+          :disable="letraUsada(letra)"
+          @click="adivinarLetra(letra.toLowerCase())"
+          class="keyboard-btn"
+          size="md"
+        />
+      </div>
     </div>
 
     <!-- Mensaje de fin de juego -->
@@ -93,7 +89,9 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useGameState } from '../composables/useGameState.js'
 
+const { estadoJuego, adivinarLetra, calcularTiempoJugado, guardarPuntuacion } = useGameState()
 const router = useRouter()
 const letraInput = ref('')
 
@@ -105,7 +103,7 @@ const categoriaFormateada = computed(() => {
     paises: 'Países',
     colores: 'Colores'
   }
-  return categorias[window.estadoJuego.categoriaSeleccionada] || 'Desconocida'
+  return categorias[estadoJuego.categoriaSeleccionada] || 'Desconocida'
 })
 
 const dificultadFormateada = computed(() => {
@@ -114,27 +112,31 @@ const dificultadFormateada = computed(() => {
     medio: 'Medio',
     dificil: 'Difícil'
   }
-  return dificultades[window.estadoJuego.dificultadSeleccionada] || 'Desconocida'
+  return dificultades[estadoJuego.dificultadSeleccionada] || 'Desconocida'
 })
 
 const intentosRestantes = computed(() => {
-  return window.estadoJuego.maxIntentos - window.estadoJuego.intentosFallidos
+  return estadoJuego.maxIntentos - estadoJuego.intentosFallidos
 })
 
-const palabraActual = computed(() => window.estadoJuego.palabraActual)
-const letrasAdivinadas = computed(() => window.estadoJuego.letrasAdivinadas)
-const juegoTerminado = computed(() => window.estadoJuego.juegoTerminado)
-const ganado = computed(() => window.estadoJuego.ganado)
+const palabraActual = computed(() => estadoJuego.palabraActual)
+const letrasAdivinadas = computed(() => estadoJuego.letrasAdivinadas)
+const juegoTerminado = computed(() => estadoJuego.juegoTerminado)
+const ganado = computed(() => estadoJuego.ganado)
 
 const palabraMostrada = computed(() => {
   return palabraActual.value.split('').map(letra =>
     letrasAdivinadas.value.includes(letra) ? letra.toUpperCase() : '_'
-  ).join(' ')
+  )
 })
 
 const letrasOrdenadas = computed(() => {
   return [...letrasAdivinadas.value].sort()
 })
+
+const letraUsada = (letra) => {
+  return letrasAdivinadas.value.includes(letra.toLowerCase())
+}
 
 const dibujoAhorcado = computed(() => {
   const dibujos = [
@@ -195,135 +197,166 @@ const dibujoAhorcado = computed(() => {
        |
 =========`
   ]
-  return dibujos[window.estadoJuego.intentosFallidos]
+  return dibujos[estadoJuego.intentosFallidos]
 })
 
 // Funciones
-const adivinarLetra = () => {
-  if (!letraInput.value || juegoTerminado.value) return
 
-  const letra = letraInput.value.toLowerCase()
-  letraInput.value = ''
-
-  if (letrasAdivinadas.value.includes(letra)) return
-
-  window.estadoJuego.letrasAdivinadas.push(letra)
-
-  if (!palabraActual.value.includes(letra)) {
-    window.estadoJuego.intentosFallidos++
-  }
-
-  verificarEstadoJuego()
-}
-
-const verificarEstadoJuego = () => {
-  const palabraAdivinada = palabraActual.value.split('').every(letra =>
-    letrasAdivinadas.value.includes(letra)
-  )
-
-  if (palabraAdivinada) {
-    window.estadoJuego.juegoTerminado = true
-    window.estadoJuego.ganado = true
-    window.estadoJuego.tiempoFin = Date.now()
-    guardarPuntuacion()
-  } else if (window.estadoJuego.intentosFallidos >= window.estadoJuego.maxIntentos) {
-    window.estadoJuego.juegoTerminado = true
-    window.estadoJuego.ganado = false
-    window.estadoJuego.tiempoFin = Date.now()
-  }
-}
-
-const guardarPuntuacion = () => {
-  const tiempo = calcularTiempoJugado()
-  const puntuacion = window.estadoJuego.ganado ? (window.estadoJuego.maxIntentos - window.estadoJuego.intentosFallidos) * 100 - tiempo : 0
-
-  const puntuaciones = JSON.parse(localStorage.getItem('puntuacionesAhorcado') || '[]')
-  puntuaciones.push({
-    categoria: window.estadoJuego.categoriaSeleccionada,
-    dificultad: window.estadoJuego.dificultadSeleccionada,
-    ganado: window.estadoJuego.ganado,
-    tiempo: tiempo,
-    puntuacion: puntuacion,
-    fecha: new Date().toISOString()
-  })
-
-  // Mantener solo las últimas 10 puntuaciones
-  if (puntuaciones.length > 10) {
-    puntuaciones.shift()
-  }
-
-  localStorage.setItem('puntuacionesAhorcado', JSON.stringify(puntuaciones))
-}
-
-const calcularTiempoJugado = () => {
-  if (!window.estadoJuego.tiempoInicio || !window.estadoJuego.tiempoFin) return 0
-  return Math.floor((window.estadoJuego.tiempoFin - window.estadoJuego.tiempoInicio) / 1000)
-}
 
 onMounted(() => {
-  if (!window.estadoJuego.palabraActual) {
+  if (!estadoJuego.palabraActual) {
     router.push('/categories')
   }
 })
 </script>
 
 <style scoped>
+.q-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  color: #e94560;
+  font-family: 'Courier New', monospace;
+}
+
+h1 {
+  font-family: 'Impact', sans-serif;
+  font-size: 2.5em;
+  color: #feca57;
+  text-shadow: 2px 2px 0px #e94560;
+  margin-bottom: 20px;
+}
+
 .hangman-drawing {
-  font-family: monospace;
-  font-size: 1.2em;
+  font-family: 'Courier New', monospace;
+  font-size: 1.5em;
   text-align: center;
   margin: 20px 0;
+  background: #0f3460;
+  border: 3px solid #e94560;
+  border-radius: 10px;
+  padding: 15px;
+  box-shadow: 0 0 20px rgba(233, 69, 96, 0.5);
+  color: #feca57;
 }
 
 .game-info {
   display: flex;
-  gap: 10px;
+  gap: 15px;
   flex-wrap: wrap;
   justify-content: center;
+  margin: 20px 0;
 }
 
 .word-progress {
   text-align: center;
+  margin: 20px 0;
+}
+
+.word-progress h2 {
+  font-family: 'Impact', sans-serif;
+  font-size: 1.8em;
+  color: #feca57;
+  text-shadow: 1px 1px 0px #e94560;
 }
 
 .word-letters {
   display: flex;
-  gap: 5px;
+  gap: 8px;
   justify-content: center;
   flex-wrap: wrap;
-  margin: 10px 0;
+  margin: 15px 0;
 }
 
 .letter-chip {
-  font-size: 1.5em;
-  min-width: 40px;
+  font-size: 1.8em;
+  min-width: 50px;
+  height: 50px;
+  font-weight: bold;
+  border: 2px solid #e94560;
+  box-shadow: 0 0 10px rgba(233, 69, 96, 0.3);
+  transition: all 0.3s ease;
+}
+
+.letter-chip:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 15px rgba(233, 69, 96, 0.5);
 }
 
 .guessed-letters {
   text-align: center;
+  margin: 20px 0;
+}
+
+.guessed-letters h3 {
+  font-family: 'Impact', sans-serif;
+  font-size: 1.5em;
+  color: #feca57;
+  text-shadow: 1px 1px 0px #e94560;
 }
 
 .letters-grid {
   display: flex;
-  gap: 5px;
+  gap: 8px;
   justify-content: center;
   flex-wrap: wrap;
-  margin: 10px 0;
+  margin: 15px 0;
 }
 
-.input-section {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  justify-content: center;
+.keyboard-section {
+  text-align: center;
+  margin: 20px 0;
+}
+
+.keyboard-section h3 {
+  font-family: 'Impact', sans-serif;
+  font-size: 1.5em;
+  color: #feca57;
+  text-shadow: 1px 1px 0px #e94560;
+}
+
+.keyboard {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
+  max-width: 350px;
+  margin: 0 auto;
+}
+
+.keyboard-btn {
+  min-width: 45px;
+  height: 45px;
+  font-size: 1em;
+  font-weight: bold;
+  border: 2px solid #e94560;
+  box-shadow: 0 0 10px rgba(233, 69, 96, 0.3);
+  transition: all 0.2s ease;
+}
+
+.keyboard-btn:hover:not(:disabled) {
+  transform: scale(1.1);
+  box-shadow: 0 0 15px rgba(233, 69, 96, 0.6);
+}
+
+.keyboard-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .game-end {
   width: 100%;
-  max-width: 400px;
+  max-width: 450px;
+  margin: 20px 0;
 }
 
-.q-page {
-  min-height: 100vh;
+.game-end .q-card {
+  border: 3px solid #e94560;
+  box-shadow: 0 0 20px rgba(233, 69, 96, 0.5);
+}
+
+.game-end .q-card .text-h6 {
+  font-family: 'Impact', sans-serif;
+  font-size: 1.8em;
+  color: #feca57;
+  text-shadow: 1px 1px 0px #e94560;
 }
 </style>

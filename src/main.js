@@ -4,7 +4,7 @@ import App from './App.vue'
 import { Quasar } from 'quasar'
 
 // Import icon libraries
-import '@quasar/extras/material-icons-sharp/material-icons-sharp.css'
+import '@quasar/extras/material-icons/material-icons.css'
 import '@quasar/extras/fontawesome-v6/fontawesome-v6.css'
 import '@quasar/extras/bootstrap-icons/bootstrap-icons.css'
 import { router } from "./routes/routes.js"

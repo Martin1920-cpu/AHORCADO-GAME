@@ -28,6 +28,8 @@ body {
   place-items: center;
   min-width: 320px;
   min-height: 100vh;
+  background: url('https://wallpapers.com/images/hd/arcade-background-5l87nm2da1c2010n.jpg') no-repeat center center fixed;
+  background-size: cover;
 }
 
 h1 {
