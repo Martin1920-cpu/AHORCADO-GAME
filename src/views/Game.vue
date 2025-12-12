@@ -16,6 +16,9 @@
       <q-chip color="warning" text-color="white" icon="error">
         Intentos restantes: {{ intentosRestantes }}
       </q-chip>
+      <q-chip color="info" text-color="white" icon="schedule">
+        Tiempo: {{ timerFormateado }}
+      </q-chip>
     </div>
 
     <!-- Progreso de la palabra -->
@@ -33,6 +36,16 @@
           {{ letra }}
         </q-chip>
       </div>
+    </div>
+
+    <!-- Pista -->
+    <div class="hint-section">
+      <q-card class="hint-card bg-dark text-white">
+        <q-card-section>
+          <div class="text-h6">Pista:</div>
+          <div class="text-body1">{{ pistaActual }}</div>
+        </q-card-section>
+      </q-card>
     </div>
 
     <!-- Letras adivinadas -->
@@ -87,13 +100,15 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useGameState } from '../composables/useGameState.js'
 
 const { estadoJuego, adivinarLetra, calcularTiempoJugado, guardarPuntuacion } = useGameState()
 const router = useRouter()
 const letraInput = ref('')
+const timer = ref(0)
+let timerInterval = null
 
 // Computed properties
 const categoriaFormateada = computed(() => {
@@ -120,6 +135,7 @@ const intentosRestantes = computed(() => {
 })
 
 const palabraActual = computed(() => estadoJuego.palabraActual)
+const pistaActual = computed(() => estadoJuego.pistaActual)
 const letrasAdivinadas = computed(() => estadoJuego.letrasAdivinadas)
 const juegoTerminado = computed(() => estadoJuego.juegoTerminado)
 const ganado = computed(() => estadoJuego.ganado)
@@ -137,6 +153,12 @@ const letrasOrdenadas = computed(() => {
 const letraUsada = (letra) => {
   return letrasAdivinadas.value.includes(letra.toLowerCase())
 }
+
+const timerFormateado = computed(() => {
+  const minutos = Math.floor(timer.value / 60)
+  const segundos = timer.value % 60
+  return `${minutos.toString().padStart(2, '0')}:${segundos.toString().padStart(2, '0')}`
+})
 
 const dibujoAhorcado = computed(() => {
   const dibujos = [
@@ -201,12 +223,38 @@ const dibujoAhorcado = computed(() => {
 })
 
 // Funciones
+const iniciarTimer = () => {
+  if (timerInterval) clearInterval(timerInterval)
+  timerInterval = setInterval(() => {
+    timer.value++
+  }, 1000)
+}
 
+const detenerTimer = () => {
+  if (timerInterval) {
+    clearInterval(timerInterval)
+    timerInterval = null
+  }
+}
+
+watch(() => estadoJuego.juegoTerminado, (nuevoValor) => {
+  if (nuevoValor) {
+    detenerTimer()
+  } else {
+    iniciarTimer()
+  }
+})
 
 onMounted(() => {
   if (!estadoJuego.palabraActual) {
     router.push('/categories')
+  } else if (!estadoJuego.juegoTerminado) {
+    iniciarTimer()
   }
+})
+
+onUnmounted(() => {
+  detenerTimer()
 })
 </script>
 
@@ -265,6 +313,32 @@ h1 {
   justify-content: center;
   flex-wrap: wrap;
   margin: 15px 0;
+}
+
+.hint-section {
+  text-align: center;
+  margin: 20px 0;
+}
+
+.hint-card {
+  max-width: 500px;
+  margin: 0 auto;
+  border: 3px solid #e94560;
+  box-shadow: 0 0 20px rgba(233, 69, 96, 0.5);
+}
+
+.hint-card .text-h6 {
+  font-family: 'Impact', sans-serif;
+  font-size: 1.5em;
+  color: #feca57;
+  text-shadow: 1px 1px 0px #e94560;
+  margin-bottom: 10px;
+}
+
+.hint-card .text-body1 {
+  font-family: 'Courier New', monospace;
+  font-size: 1.2em;
+  color: #ffffff;
 }
 
 .letter-chip {

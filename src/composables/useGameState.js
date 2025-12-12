@@ -1,11 +1,47 @@
 import { reactive } from 'vue'
 
-// Datos de palabras por categoría
+// Datos de palabras por categoría con pistas
 const palabrasPorCategoria = {
-  animales: ['gato', 'perro', 'elefante', 'leon', 'tigre', 'oso', 'conejo', 'pajaro'],
-  frutas: ['manzana', 'platano', 'naranja', 'uva', 'pera', 'sandia', 'melon', 'fresa'],
-  paises: ['espana', 'francia', 'italia', 'alemania', 'brasil', 'mexico', 'argentina', 'colombia'],
-  colores: ['rojo', 'azul', 'verde', 'amarillo', 'morado', 'rosa', 'negro', 'blanco']
+  animales: [
+    { palabra: 'gato', pista: 'Animal doméstico que maúlla' },
+    { palabra: 'perro', pista: 'El mejor amigo del hombre' },
+    { palabra: 'elefante', pista: 'Animal grande con trompa' },
+    { palabra: 'leon', pista: 'Rey de la selva' },
+    { palabra: 'tigre', pista: 'Felino con rayas' },
+    { palabra: 'oso', pista: 'Animal grande que hiberna' },
+    { palabra: 'conejo', pista: 'Animal pequeño con orejas largas' },
+    { palabra: 'pajaro', pista: 'Animal que vuela y canta' }
+  ],
+  frutas: [
+    { palabra: 'manzana', pista: 'Fruta roja o verde, crujiente' },
+    { palabra: 'platano', pista: 'Fruta amarilla, curva' },
+    { palabra: 'naranja', pista: 'Fruta cítrica, redonda' },
+    { palabra: 'uva', pista: 'Fruta pequeña, en racimos' },
+    { palabra: 'pera', pista: 'Fruta con forma de campana' },
+    { palabra: 'sandia', pista: 'Fruta grande, verde por fuera, roja por dentro' },
+    { palabra: 'melon', pista: 'Fruta redonda, dulce y jugosa' },
+    { palabra: 'fresa', pista: 'Fruta pequeña, roja y dulce' }
+  ],
+  paises: [
+    { palabra: 'españa', pista: 'País en Europa con toros y flamenco' },
+    { palabra: 'francia', pista: 'País famoso por la Torre Eiffel' },
+    { palabra: 'italia', pista: 'País con forma de bota, pizza y pasta' },
+    { palabra: 'alemania', pista: 'País europeo con cerveza y salchichas' },
+    { palabra: 'brasil', pista: 'País sudamericano con samba y fútbol' },
+    { palabra: 'mexico', pista: 'País con pirámides y tacos' },
+    { palabra: 'argentina', pista: 'País sudamericano con tango y gauchos' },
+    { palabra: 'colombia', pista: 'País con café y emeraldes' }
+  ],
+  colores: [
+    { palabra: 'rojo', pista: 'Color de la sangre y el fuego' },
+    { palabra: 'azul', pista: 'Color del cielo y el mar' },
+    { palabra: 'verde', pista: 'Color de la hierba y los árboles' },
+    { palabra: 'amarillo', pista: 'Color del sol y los limones' },
+    { palabra: 'morado', pista: 'Color de las uvas y las violetas' },
+    { palabra: 'rosa', pista: 'Color de las flores y el algodón de azúcar' },
+    { palabra: 'negro', pista: 'Color de la noche y el carbón' },
+    { palabra: 'blanco', pista: 'Color de la nieve y la leche' }
+  ]
 }
 
 // Estado del juego
@@ -13,6 +49,7 @@ const estadoJuego = reactive({
   categoriaSeleccionada: null,
   dificultadSeleccionada: null,
   palabraActual: '',
+  pistaActual: '',
   letrasAdivinadas: [],
   intentosFallidos: 0,
   maxIntentos: 6,
@@ -26,7 +63,9 @@ const estadoJuego = reactive({
 export function useGameState() {
   // Iniciar nuevo juego
   const iniciarJuego = () => {
-    estadoJuego.palabraActual = seleccionarPalabraAleatoria(estadoJuego.categoriaSeleccionada, estadoJuego.dificultadSeleccionada)
+    const palabraSeleccionada = seleccionarPalabraAleatoria(estadoJuego.categoriaSeleccionada, estadoJuego.dificultadSeleccionada)
+    estadoJuego.palabraActual = palabraSeleccionada.palabra
+    estadoJuego.pistaActual = palabraSeleccionada.pista
     estadoJuego.letrasAdivinadas = []
     estadoJuego.intentosFallidos = 0
     estadoJuego.juegoTerminado = false
@@ -41,11 +80,11 @@ export function useGameState() {
     let palabrasFiltradas = palabras
 
     if (dificultad === 'facil') {
-      palabrasFiltradas = palabras.filter(p => p.length <= 5)
+      palabrasFiltradas = palabras.filter(p => p.palabra.length <= 5)
     } else if (dificultad === 'medio') {
-      palabrasFiltradas = palabras.filter(p => p.length > 5 && p.length <= 8)
+      palabrasFiltradas = palabras.filter(p => p.palabra.length > 5 && p.palabra.length <= 8)
     } else if (dificultad === 'dificil') {
-      palabrasFiltradas = palabras.filter(p => p.length > 8)
+      palabrasFiltradas = palabras.filter(p => p.palabra.length > 8)
     }
 
     if (palabrasFiltradas.length === 0) palabrasFiltradas = palabras
@@ -127,6 +166,7 @@ export function useGameState() {
     estadoJuego.categoriaSeleccionada = null
     estadoJuego.dificultadSeleccionada = null
     estadoJuego.palabraActual = ''
+    estadoJuego.pistaActual = ''
     estadoJuego.letrasAdivinadas = []
     estadoJuego.intentosFallidos = 0
     estadoJuego.tiempoInicio = null
