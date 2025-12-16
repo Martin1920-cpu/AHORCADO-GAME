@@ -1,85 +1,91 @@
 <template>
-  <q-page class="flex flex-center column q-gutter-sm q-pa-sm">
-    <!-- Dibujo -->
-    <div class="hangman-drawing">
-      <pre>{{ dibujoAhorcado }}</pre>
-    </div>
-
-    <!-- Información del juego -->
-    <div class="game-info">
-      <q-chip color="primary" text-color="white" icon="category">
-        Categoría: {{ categoriaFormateada }}
-      </q-chip>
-      <q-chip color="secondary" text-color="white" icon="star">
-        Dificultad: {{ dificultadFormateada }}
-      </q-chip>
-      <q-chip color="warning" text-color="white" icon="error">
-        Intentos restantes: {{ intentosRestantes }}
-      </q-chip>
-      <q-chip color="info" text-color="white" icon="schedule">
-        Tiempo: {{ timerFormateado }}
-      </q-chip>
-    </div>
-
-    <!-- Progreso de la palabra -->
-    <div class="word-progress">
-      <h2>Palabra:</h2>
-      <div class="word-letters">
-        <q-chip
-          v-for="(letra, index) in palabraMostrada"
-          :key="index"
-          :color="letra === '_' ? 'grey' : 'positive'"
-          text-color="white"
-          size="lg"
-          class="letter-chip"
-        >
-          {{ letra }}
+  <q-page class="flex flex-center row q-gutter-xs q-pa-xs">
+    <!-- Lado izquierdo -->
+    <div class="left-side flex flex-center column q-gutter-xs">
+      <!-- Información del juego -->
+      <div class="game-info">
+        <q-chip color="primary" text-color="white" icon="category">
+          Categoría: {{ categoriaFormateada }}
         </q-chip>
+        <q-chip color="secondary" text-color="white" icon="star">
+          Dificultad: {{ dificultadFormateada }}
+        </q-chip>
+        <q-chip color="warning" text-color="white" icon="error">
+          Intentos restantes: {{ intentosRestantes }}
+        </q-chip>
+        <q-chip color="info" text-color="white" icon="schedule">
+          Tiempo: {{ timerFormateado }}
+        </q-chip>
+      </div>
+
+      <!-- Dibujo -->
+      <div class="hangman-drawing">
+        <pre>{{ dibujoAhorcado }}</pre>
+      </div>
+
+      <!-- Progreso de la palabra -->
+      <div class="word-progress">
+        <h2>Palabra:</h2>
+        <div class="word-letters">
+          <q-chip
+            v-for="(letra, index) in palabraMostrada"
+            :key="index"
+            :color="letra === '_' ? 'grey' : 'positive'"
+            text-color="white"
+            size="lg"
+            class="letter-chip"
+          >
+            {{ letra }}
+          </q-chip>
+        </div>
+      </div>
+
+      <!-- Pista -->
+      <div class="hint-section">
+        <q-card class="hint-card bg-dark text-white">
+          <q-card-section>
+            <div class="text-h6">Pista:</div>
+            <div class="text-body1">{{ pistaActual }}</div>
+          </q-card-section>
+        </q-card>
       </div>
     </div>
 
-    <!-- Pista -->
-    <div class="hint-section">
-      <q-card class="hint-card bg-dark text-white">
-        <q-card-section>
-          <div class="text-h6">Pista:</div>
-          <div class="text-body1">{{ pistaActual }}</div>
-        </q-card-section>
-      </q-card>
-    </div>
-
-    <!-- Letras adivinadas -->
-    <div class="guessed-letters">
-      <div class="letters-grid">
-        <q-chip
-          v-for="letra in letrasOrdenadas"
-          :key="letra"
-          :color="palabraActual.includes(letra) ? 'positive' : 'negative'"
-          text-color="white"
-        >
-          {{ letra.toUpperCase() }}
-        </q-chip>
+    <!-- Lado derecho -->
+    <div class="right-side flex flex-center column q-gutter-xs">
+      <!-- Letras adivinadas -->
+      <div class="guessed-letters">
+        <div class="letters-grid">
+          <q-chip
+            v-for="letra in letrasOrdenadas"
+            :key="letra"
+            :color="palabraActual.includes(letra) ? 'positive' : 'negative'"
+            text-color="white"
+          >
+            {{ letra.toUpperCase() }}
+          </q-chip>
+        </div>
       </div>
-    </div>
 
-    <!-- Teclado virtual -->
-    <div v-if="!juegoTerminado" class="keyboard-section">
-      <div class="keyboard">
-        <q-btn
-          v-for="letra in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'"
-          :key="letra"
-          :label="letra"
-          :color="letraUsada(letra) ? 'grey' : 'primary'"
-          :disable="letraUsada(letra)"
-          @click="adivinarLetra(letra.toLowerCase())"
-          class="keyboard-btn"
-          size="md"
-        />
+      <!-- Teclado virtual -->
+      <div v-if="!juegoTerminado" class="keyboard-section">
+        <div class="keyboard">
+          <q-btn
+            v-for="letra in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'"
+            :key="letra"
+            :label="letra"
+            :color="letraUsada(letra) ? 'grey' : 'primary'"
+            :disable="letraUsada(letra)"
+            @click="adivinarLetra(letra.toLowerCase())"
+            class="keyboard-btn"
+            size="md"
+          />
+        </div>
       </div>
     </div>
 
     <!-- Mensaje de fin de juego -->
-    <div v-if="juegoTerminado" class="game-end">
+    <div v-if="juegoTerminado" class="game-end full-width">
       <q-card class="q-pa-md" :class="ganado ? 'bg-positive' : 'bg-negative'">
         <q-card-section>
           <div class="text-h6">{{ ganado ? '¡Ganaste!' : '¡Perdiste!' }}</div>
@@ -260,7 +266,8 @@ onUnmounted(() => {
 
 <style scoped>
 .q-page {
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
   color: #e94560;
   font-family: 'Courier New', monospace;
@@ -432,5 +439,23 @@ h1 {
   font-size: 1.8em;
   color: #feca57;
   text-shadow: 1px 1px 0px #e94560;
+}
+
+.left-side {
+  flex: 1;
+  max-width: 50%;
+}
+
+.right-side {
+  flex: 1;
+  max-width: 50%;
+}
+
+.full-width {
+  width: 100%;
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
 }
 </style>

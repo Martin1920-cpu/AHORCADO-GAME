@@ -37,8 +37,34 @@
     <q-card class="q-pa-md" style="width: 100%; max-width: 500px">
       <q-card-section>
         <div class="text-h6">Historial de Puntuaciones</div>
+        <div class="filter-buttons q-gutter-sm q-mb-md">
+          <q-btn
+            :class="{ active: dificultadFiltro === '' }"
+            label="Todas"
+            @click="dificultadFiltro = ''"
+            flat
+          />
+          <q-btn
+            :class="{ active: dificultadFiltro === 'facil' }"
+            label="Fácil"
+            @click="dificultadFiltro = 'facil'"
+            flat
+          />
+          <q-btn
+            :class="{ active: dificultadFiltro === 'medio' }"
+            label="Medio"
+            @click="dificultadFiltro = 'medio'"
+            flat
+          />
+          <q-btn
+            :class="{ active: dificultadFiltro === 'dificil' }"
+            label="Difícil"
+            @click="dificultadFiltro = 'dificil'"
+            flat
+          />
+        </div>
         <q-list>
-          <q-item v-for="(puntuacion, index) in puntuaciones.slice(0, 5)" :key="index">
+          <q-item v-for="(puntuacion, index) in puntuacionesFiltradas.slice(0, 5)" :key="index">
             <q-item-section>
               <q-item-label>{{ formatearCategoria(puntuacion.categoria) }} - {{ formatearDificultad(puntuacion.dificultad) }}</q-item-label>
               <q-item-label caption>
@@ -111,6 +137,16 @@ const tiempoFormateado = computed(() => {
 })
 
 const puntuaciones = ref([])
+const dificultadFiltro = ref('')
+
+
+
+const puntuacionesFiltradas = computed(() => {
+  if (!dificultadFiltro.value) {
+    return puntuaciones.value
+  }
+  return puntuaciones.value.filter(p => p.dificultad === dificultadFiltro.value)
+})
 
 // Funciones
 const formatearCategoria = (categoria) => {
@@ -157,7 +193,7 @@ onMounted(() => {
 <style scoped>
 .q-page {
   min-height: 100vh;
-  color: #e94560;
+  color: black;
   font-family: 'Courier New', monospace;
 }
 
@@ -230,8 +266,8 @@ h1 {
   font-weight: bold;
 }
 
-.q-item-label.caption {
-  color: #e94560;
+.q-item__label--caption {
+  color: white;
   font-size: 0.9em;
 }
 
@@ -258,5 +294,33 @@ h1 {
 
 .q-btn.flat:hover {
   background: rgba(254, 202, 87, 0.1);
+}
+
+.q-btn.flat.active {
+  background: linear-gradient(45deg, #feca57, #e94560);
+  color: #1a1a2e;
+  border: 2px solid #e94560;
+}
+
+.q-select {
+  color: black;
+}
+
+.q-select .q-field__native {
+  color: black;
+}
+
+.q-select .q-menu {
+  background: rgba(15, 52, 96, 0.9);
+  border: 2px solid #e94560;
+  border-radius: 10px;
+}
+
+.q-select .q-menu .q-item {
+  color: black;
+}
+
+.q-select .q-menu .q-item:hover {
+  background: rgba(233, 69, 96, 0.1);
 }
 </style>
